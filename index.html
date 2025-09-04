@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纪念日提醒</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-title {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            padding: 2rem 0;
+            margin: 0;
+        }
+        
+        .section-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 2rem;
+            margin-bottom: 1rem;
+            border-radius: 20px;
+        }
+        
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            margin: 2rem 0;
+        }
+        
+        .section-title {
+            color: #333;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            text-align: center;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .section-title .bi-calendar-heart {
+            color: #ff6b6b;
+        }
+        
+        .compact-card {
+            width: 240px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+        
+        .compact-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-cover {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        
+        .card-content {
+            padding: 16px;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #262626;
+        }
+        
+        .card-description {
+            font-size: 14px;
+            color: #8c8c8c;
+            margin-bottom: 12px;
+        }
+        
+        .card-counter {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .anniversary-counter {
+            background: linear-gradient(45deg, #00d2d3, #54a0ff);
+        }
+        
+        .cards-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: flex-start;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="main-title">纪念日提醒</h1>
+        
+        <div class="container">
+            <!-- 农历 -->
+            <div class="section-panel">
+                <h3 class="section-title">
+                    <i class="bi bi-calendar-heart me-2"></i>
+                    农历
+                </h3>
+                <div id="lunarBirthdays" class="cards-grid"></div>
+            </div>
+            
+            <!-- 分割线 -->
+            <div class="divider"></div>
+            
+            <!-- 阳历 -->
+            <div class="section-panel">
+                <h3 class="section-title">
+                    <i class="bi bi-calendar-heart me-2"></i>
+                    阳历
+                </h3>
+                <div id="solarAnniversaries" class="cards-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 农历生日数据
+        const lunarBirthdays = [
+            { 
+                name: "八月", 
+                date: "1995-09-01",
+                image: "https://cdn.pixabay.com/photo/2017/01/11/11/33/cake-1971552_960_720.jpg"
+            },
+            { 
+                name: "肥卷", 
+                date: "1995-08-02",
+                image: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=240&h=160&fit=crop"
+            }
+        ];
+
+        // 阳历纪念日数据
+        const solarAnniversaries = [
+            { 
+                name: "结婚纪念日", 
+                date: "2023-05-01",
+                image: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=240&h=160&fit=crop"
+            }
+        ];
+
+        function calculateLunarBirthday(lunarDateStr) {
+            const [year, month, day] = lunarDateStr.split('-').map(Number);
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            
+            let thisYearBirthday, nextYearBirthday;
+            
+            try {
+                const thisYearLunar = Lunar.fromYmd(currentYear, month, day);
+                thisYearBirthday = thisYearLunar.getSolar().toYmd();
+                
+                const nextYearLunar = Lunar.fromYmd(currentYear + 1, month, day);
+                nextYearBirthday = nextYearLunar.getSolar().toYmd();
+            } catch (e) {
+                return { daysUntil: "计算错误" };
+            }
+            
+            const thisYearDate = new Date(thisYearBirthday);
+            const nextYearDate = new Date(nextYearBirthday);
+            
+            let nextBirthday = thisYearDate >= today ? thisYearDate : nextYearDate;
+            const diffTime = nextBirthday - today;
+            const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return { daysUntil: daysUntil === 0 ? "今天" : daysUntil };
+        }
+
+        function calculateSolarAnniversary(dateStr) {
+            const anniversaryDate = new Date(dateStr);
+            const today = new Date();
+            
+            const diffTime = today - anniversaryDate;
+            const daysPassed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            const currentYear = today.getFullYear();
+            let thisYearAnniversary = new Date(currentYear, anniversaryDate.getMonth(), anniversaryDate.getDate());
+            
+            if (thisYearAnniversary < today) {
+                thisYearAnniversary = new Date(currentYear + 1, anniversaryDate.getMonth(), anniversaryDate.getDate());
+            }
+            
+            const daysUntilNext = Math.ceil((thisYearAnniversary - today) / (1000 * 60 * 60 * 24));
+            
+            return {
+                daysPassed,
+                daysUntil: daysUntilNext === 0 ? "今天" : daysUntilNext
+            };
+        }
+
+        function renderLunarBirthdays() {
+            const container = document.getElementById('lunarBirthdays');
+            container.innerHTML = lunarBirthdays.map(birthday => {
+                const calc = calculateLunarBirthday(birthday.date);
+                const daysText = calc.daysUntil === "今天" ? "今天生日!" : `${calc.daysUntil}天后`;
+                
+                return `
+                    <div class="compact-card">
+                        <img src="${birthday.image}" alt="${birthday.name}" class="card-cover">
+                        <div class="card-content">
+                            <div class="card-title">${birthday.name}</div>
+                            <div class="card-description">农历 ${birthday.date}</div>
+                            <div class="card-counter">
+                                <i class="bi bi-gift me-1"></i>${daysText}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSolarAnniversaries() {
+            const container = document.getElementById('solarAnniversaries');
+            container.innerHTML = solarAnniversaries.map(anniversary => {
+                const calc = calculateSolarAnniversary(anniversary.date);
+                const nextText = calc.daysUntil === "今天" ? "今天纪念日!" : `${calc.daysUntil}天后`;
+                
+                return `
+                    <div class="compact-card">
+                        <img src="${anniversary.image}" alt="${anniversary.name}" class="card-cover">
+                        <div class="card-content">
+                            <div class="card-title">${anniversary.name}</div>
+                            <div class="card-description">${anniversary.date} · 已过${calc.daysPassed}天</div>
+                            <div class="card-counter anniversary-counter">
+                                <i class="bi bi-heart me-1"></i>${nextText}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderLunarBirthdays();
+            renderSolarAnniversaries();
+        });
+    </script>
+</body>
+</html>
